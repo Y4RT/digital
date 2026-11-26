@@ -1,5 +1,5 @@
--- Admin Panel UI (Roblox)
--- Put this LocalScript in StarterGui
+-- Admin Panel (Single Script - Executor Ready)
+-- Just execute this
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -8,7 +8,12 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
---// Theme Variables
+-- Destroy old one if it already exists
+if playerGui:FindFirstChild("AdminPanel") then
+	playerGui.AdminPanel:Destroy()
+end
+
+-- Theme
 local Theme = {
 	Background = Color3.fromRGB(0, 0, 0),
 	Surface = Color3.fromRGB(10, 10, 10),
@@ -18,17 +23,16 @@ local Theme = {
 	TextDim = Color3.fromRGB(136, 136, 136),
 	Accent = Color3.fromRGB(255, 255, 255),
 	Radius = 12,
-	Glow = 0.25
 }
 
---// Create ScreenGui
+-- ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AdminPanel"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
---// Main Container
+-- Main Frame
 local main = Instance.new("Frame")
 main.Name = "Main"
 main.Size = UDim2.new(0, 900, 0, 560)
@@ -38,28 +42,17 @@ main.BorderSizePixel = 0
 main.Visible = false
 main.Parent = screenGui
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, Theme.Radius)
-mainCorner.Parent = main
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, Theme.Radius)
+Instance.new("UIStroke", main).Color = Theme.Border
 
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Theme.Border
-mainStroke.Thickness = 1
-mainStroke.Parent = main
-
---// Sidebar
+-- Sidebar
 local sidebar = Instance.new("Frame")
-sidebar.Name = "Sidebar"
 sidebar.Size = UDim2.new(0, 72, 1, 0)
 sidebar.BackgroundColor3 = Theme.Surface
 sidebar.BorderSizePixel = 0
 sidebar.Parent = main
+Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, Theme.Radius)
 
-local sidebarCorner = Instance.new("UICorner")
-sidebarCorner.CornerRadius = UDim.new(0, Theme.Radius)
-sidebarCorner.Parent = sidebar
-
--- make left side square
 local sidebarFix = Instance.new("Frame")
 sidebarFix.Size = UDim2.new(0, 20, 1, 0)
 sidebarFix.Position = UDim2.new(1, -20, 0, 0)
@@ -67,25 +60,21 @@ sidebarFix.BackgroundColor3 = Theme.Surface
 sidebarFix.BorderSizePixel = 0
 sidebarFix.Parent = sidebar
 
---// Content Area
+-- Content
 local content = Instance.new("Frame")
-content.Name = "Content"
 content.Size = UDim2.new(1, -72, 1, 0)
 content.Position = UDim2.new(0, 72, 0, 0)
 content.BackgroundColor3 = Theme.Background
 content.BorderSizePixel = 0
 content.Parent = main
 
--- Header
 local header = Instance.new("Frame")
-header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 60)
 header.BackgroundColor3 = Theme.Surface
 header.BorderSizePixel = 0
 header.Parent = content
 
 local headerTitle = Instance.new("TextLabel")
-headerTitle.Name = "Title"
 headerTitle.Size = UDim2.new(1, -40, 1, 0)
 headerTitle.Position = UDim2.new(0, 24, 0, 0)
 headerTitle.BackgroundTransparency = 1
@@ -96,15 +85,13 @@ headerTitle.Font = Enum.Font.GothamMedium
 headerTitle.TextXAlignment = Enum.TextXAlignment.Left
 headerTitle.Parent = header
 
---// Pages Container
 local pages = Instance.new("Frame")
-pages.Name = "Pages"
 pages.Size = UDim2.new(1, 0, 1, -60)
 pages.Position = UDim2.new(0, 0, 0, 60)
 pages.BackgroundTransparency = 1
 pages.Parent = content
 
--- Helper function to create a page
+-- Helper functions
 local function createPage(name)
 	local page = Instance.new("ScrollingFrame")
 	page.Name = name
@@ -113,8 +100,8 @@ local function createPage(name)
 	page.BorderSizePixel = 0
 	page.ScrollBarThickness = 4
 	page.ScrollBarImageColor3 = Theme.Border
-	page.CanvasSize = UDim2.new(0, 0, 0, 0)
 	page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	page.CanvasSize = UDim2.new(0, 0, 0, 0)
 	page.Visible = false
 	page.Parent = pages
 
@@ -127,37 +114,19 @@ local function createPage(name)
 
 	local list = Instance.new("UIListLayout")
 	list.Padding = UDim.new(0, 16)
-	list.SortOrder = Enum.SortOrder.LayoutOrder
 	list.Parent = page
 
 	return page
 end
 
--- Create pages
-local dashboardPage = createPage("Dashboard")
-local playersPage = createPage("Players")
-local worldPage = createPage("World")
-local logsPage = createPage("Logs")
-local themePage = createPage("Theme")
-
-dashboardPage.Visible = true
-
---======= DASHBOARD CONTENT =======
 local function createStatCard(parent, title, value)
 	local card = Instance.new("Frame")
 	card.Size = UDim2.new(0, 180, 0, 90)
 	card.BackgroundColor3 = Theme.Surface2
 	card.BorderSizePixel = 0
 	card.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, Theme.Radius)
-	corner.Parent = card
-
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Theme.Border
-	stroke.Thickness = 1
-	stroke.Parent = card
+	Instance.new("UICorner", card).CornerRadius = UDim.new(0, Theme.Radius)
+	Instance.new("UIStroke", card).Color = Theme.Border
 
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, -24, 0, 20)
@@ -180,73 +149,22 @@ local function createStatCard(parent, title, value)
 	val.Font = Enum.Font.GothamMedium
 	val.TextXAlignment = Enum.TextXAlignment.Left
 	val.Parent = card
-
-	return card
 end
-
-local statsRow = Instance.new("Frame")
-statsRow.Size = UDim2.new(1, 0, 0, 90)
-statsRow.BackgroundTransparency = 1
-statsRow.Parent = dashboardPage
-
-local statsLayout = Instance.new("UIListLayout")
-statsLayout.FillDirection = Enum.FillDirection.Horizontal
-statsLayout.Padding = UDim.new(0, 16)
-statsLayout.Parent = statsRow
-
-createStatCard(statsRow, "Online Players", "24")
-createStatCard(statsRow, "Server Uptime", "14h 32m")
-createStatCard(statsRow, "TPS", "19.8")
-createStatCard(statsRow, "Memory", "2.1 GB")
-
--- Quick Actions card
-local actionsCard = Instance.new("Frame")
-actionsCard.Size = UDim2.new(1, 0, 0, 120)
-actionsCard.BackgroundColor3 = Theme.Surface
-actionsCard.BorderSizePixel = 0
-actionsCard.Parent = dashboardPage
-
-local acCorner = Instance.new("UICorner")
-acCorner.CornerRadius = UDim.new(0, Theme.Radius)
-acCorner.Parent = actionsCard
-
-local acStroke = Instance.new("UIStroke")
-acStroke.Color = Theme.Border
-acStroke.Thickness = 1
-acStroke.Parent = actionsCard
-
-local acTitle = Instance.new("TextLabel")
-acTitle.Size = UDim2.new(1, -32, 0, 24)
-acTitle.Position = UDim2.new(0, 20, 0, 16)
-acTitle.BackgroundTransparency = 1
-acTitle.Text = "Quick Actions"
-acTitle.TextColor3 = Theme.Text
-acTitle.TextSize = 15
-acTitle.Font = Enum.Font.GothamMedium
-acTitle.TextXAlignment = Enum.TextXAlignment.Left
-acTitle.Parent = actionsCard
 
 local function createButton(parent, text, isPrimary)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0, 140, 0, 36)
 	btn.BackgroundColor3 = isPrimary and Theme.Accent or Theme.Surface2
 	btn.Text = text
-	btn.TextColor3 = isPrimary and Color3.fromRGB(0, 0, 0) or Theme.Text
+	btn.TextColor3 = isPrimary and Color3.fromRGB(0,0,0) or Theme.Text
 	btn.TextSize = 13
 	btn.Font = Enum.Font.GothamMedium
 	btn.BorderSizePixel = 0
 	btn.AutoButtonColor = false
 	btn.Parent = parent
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 10)
-	corner.Parent = btn
-
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 	if not isPrimary then
-		local stroke = Instance.new("UIStroke")
-		stroke.Color = Theme.Border
-		stroke.Thickness = 1
-		stroke.Parent = btn
+		Instance.new("UIStroke", btn).Color = Theme.Border
 	end
 
 	btn.MouseEnter:Connect(function()
@@ -262,6 +180,49 @@ local function createButton(parent, text, isPrimary)
 
 	return btn
 end
+
+-- Create Pages
+local dashboardPage = createPage("Dashboard")
+local playersPage = createPage("Players")
+local worldPage = createPage("World")
+local logsPage = createPage("Logs")
+local themePage = createPage("Theme")
+dashboardPage.Visible = true
+
+-- Dashboard Content
+local statsRow = Instance.new("Frame")
+statsRow.Size = UDim2.new(1, 0, 0, 90)
+statsRow.BackgroundTransparency = 1
+statsRow.Parent = dashboardPage
+
+local statsLayout = Instance.new("UIListLayout")
+statsLayout.FillDirection = Enum.FillDirection.Horizontal
+statsLayout.Padding = UDim.new(0, 16)
+statsLayout.Parent = statsRow
+
+createStatCard(statsRow, "Online Players", "24")
+createStatCard(statsRow, "Server Uptime", "14h 32m")
+createStatCard(statsRow, "TPS", "19.8")
+createStatCard(statsRow, "Memory", "2.1 GB")
+
+local actionsCard = Instance.new("Frame")
+actionsCard.Size = UDim2.new(1, 0, 0, 120)
+actionsCard.BackgroundColor3 = Theme.Surface
+actionsCard.BorderSizePixel = 0
+actionsCard.Parent = dashboardPage
+Instance.new("UICorner", actionsCard).CornerRadius = UDim.new(0, Theme.Radius)
+Instance.new("UIStroke", actionsCard).Color = Theme.Border
+
+local acTitle = Instance.new("TextLabel")
+acTitle.Size = UDim2.new(1, -32, 0, 24)
+acTitle.Position = UDim2.new(0, 20, 0, 16)
+acTitle.BackgroundTransparency = 1
+acTitle.Text = "Quick Actions"
+acTitle.TextColor3 = Theme.Text
+acTitle.TextSize = 15
+acTitle.Font = Enum.Font.GothamMedium
+acTitle.TextXAlignment = Enum.TextXAlignment.Left
+acTitle.Parent = actionsCard
 
 local btnRow = Instance.new("Frame")
 btnRow.Size = UDim2.new(1, -40, 0, 36)
@@ -279,21 +240,14 @@ createButton(btnRow, "Broadcast", false)
 createButton(btnRow, "Clear Chat", false)
 createButton(btnRow, "Save World", false)
 
---======= PLAYERS PAGE =======
+-- Players Page
 local playersCard = Instance.new("Frame")
 playersCard.Size = UDim2.new(1, 0, 0, 200)
 playersCard.BackgroundColor3 = Theme.Surface
 playersCard.BorderSizePixel = 0
 playersCard.Parent = playersPage
-
-local pcCorner = Instance.new("UICorner")
-pcCorner.CornerRadius = UDim.new(0, Theme.Radius)
-pcCorner.Parent = playersCard
-
-local pcStroke = Instance.new("UIStroke")
-pcStroke.Color = Theme.Border
-pcStroke.Thickness = 1
-pcStroke.Parent = playersCard
+Instance.new("UICorner", playersCard).CornerRadius = UDim.new(0, Theme.Radius)
+Instance.new("UIStroke", playersCard).Color = Theme.Border
 
 local pcTitle = Instance.new("TextLabel")
 pcTitle.Size = UDim2.new(1, -32, 0, 24)
@@ -321,21 +275,14 @@ for _, name in ipairs({"Player_Alpha", "xXShadowXx", "NoobMaster69", "AdminBot"}
 	createButton(playerList, name, false)
 end
 
---======= WORLD PAGE =======
+-- World Page
 local worldCard = Instance.new("Frame")
 worldCard.Size = UDim2.new(1, 0, 0, 120)
 worldCard.BackgroundColor3 = Theme.Surface
 worldCard.BorderSizePixel = 0
 worldCard.Parent = worldPage
-
-local wcCorner = Instance.new("UICorner")
-wcCorner.CornerRadius = UDim.new(0, Theme.Radius)
-wcCorner.Parent = worldCard
-
-local wcStroke = Instance.new("UIStroke")
-wcStroke.Color = Theme.Border
-wcStroke.Thickness = 1
-wcStroke.Parent = worldCard
+Instance.new("UICorner", worldCard).CornerRadius = UDim.new(0, Theme.Radius)
+Instance.new("UIStroke", worldCard).Color = Theme.Border
 
 local wcTitle = Instance.new("TextLabel")
 wcTitle.Size = UDim2.new(1, -32, 0, 24)
@@ -364,21 +311,14 @@ createButton(worldBtnRow, "Set Night", false)
 createButton(worldBtnRow, "Clear Weather", false)
 createButton(worldBtnRow, "Toggle PvP", false)
 
---======= LOGS PAGE =======
+-- Logs Page
 local logsCard = Instance.new("Frame")
 logsCard.Size = UDim2.new(1, 0, 0, 220)
 logsCard.BackgroundColor3 = Theme.Surface
 logsCard.BorderSizePixel = 0
 logsCard.Parent = logsPage
-
-local lcCorner = Instance.new("UICorner")
-lcCorner.CornerRadius = UDim.new(0, Theme.Radius)
-lcCorner.Parent = logsCard
-
-local lcStroke = Instance.new("UIStroke")
-lcStroke.Color = Theme.Border
-lcStroke.Thickness = 1
-lcStroke.Parent = logsCard
+Instance.new("UICorner", logsCard).CornerRadius = UDim.new(0, Theme.Radius)
+Instance.new("UIStroke", logsCard).Color = Theme.Border
 
 local lcTitle = Instance.new("TextLabel")
 lcTitle.Size = UDim2.new(1, -32, 0, 24)
@@ -403,21 +343,14 @@ logsText.TextXAlignment = Enum.TextXAlignment.Left
 logsText.TextYAlignment = Enum.TextYAlignment.Top
 logsText.Parent = logsCard
 
---======= THEME PAGE =======
+-- Theme Page
 local themeCard = Instance.new("Frame")
-themeCard.Size = UDim2.new(1, 0, 0, 280)
+themeCard.Size = UDim2.new(1, 0, 0, 180)
 themeCard.BackgroundColor3 = Theme.Surface
 themeCard.BorderSizePixel = 0
 themeCard.Parent = themePage
-
-local tcCorner = Instance.new("UICorner")
-tcCorner.CornerRadius = UDim.new(0, Theme.Radius)
-tcCorner.Parent = themeCard
-
-local tcStroke = Instance.new("UIStroke")
-tcStroke.Color = Theme.Border
-tcStroke.Thickness = 1
-tcStroke.Parent = themeCard
+Instance.new("UICorner", themeCard).CornerRadius = UDim.new(0, Theme.Radius)
+Instance.new("UIStroke", themeCard).Color = Theme.Border
 
 local tcTitle = Instance.new("TextLabel")
 tcTitle.Size = UDim2.new(1, -32, 0, 24)
@@ -434,36 +367,28 @@ local themeInfo = Instance.new("TextLabel")
 themeInfo.Size = UDim2.new(1, -40, 0, 80)
 themeInfo.Position = UDim2.new(0, 20, 0, 56)
 themeInfo.BackgroundTransparency = 1
-themeInfo.Text = "Accent Color, Glow, Radius and Light Mode can be customized here.\n\n(Full color pickers + live preview coming in next version)"
+themeInfo.Text = "Accent color + live theme changer can be added here."
 themeInfo.TextColor3 = Theme.TextDim
 themeInfo.TextSize = 13
 themeInfo.Font = Enum.Font.Gotham
 themeInfo.TextXAlignment = Enum.TextXAlignment.Left
-themeInfo.TextYAlignment = Enum.TextYAlignment.Top
 themeInfo.Parent = themeCard
 
-local resetBtn = createButton(themeCard, "Reset Theme", true)
-resetBtn.Position = UDim2.new(0, 20, 0, 160)
-resetBtn.Size = UDim2.new(0, 160, 0, 36)
-
---======= SIDEBAR BUTTONS =======
-local function createNavButton(iconText, pageName, order)
+-- Sidebar Buttons
+local function createNavButton(icon, pageName, order)
 	local btn = Instance.new("TextButton")
 	btn.Name = pageName
 	btn.Size = UDim2.new(0, 44, 0, 44)
 	btn.Position = UDim2.new(0.5, -22, 0, 20 + (order * 52))
 	btn.BackgroundColor3 = Theme.Surface
-	btn.Text = iconText
+	btn.Text = icon
 	btn.TextColor3 = Theme.TextDim
 	btn.TextSize = 18
 	btn.Font = Enum.Font.GothamBold
 	btn.BorderSizePixel = 0
 	btn.AutoButtonColor = false
 	btn.Parent = sidebar
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12)
-	corner.Parent = btn
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
 	btn.MouseEnter:Connect(function()
 		if btn.BackgroundColor3 ~= Theme.Accent then
@@ -487,7 +412,6 @@ local navButtons = {
 	createNavButton("⚙", "Theme", 5)
 }
 
--- Make first button active
 navButtons[1].BackgroundColor3 = Theme.Accent
 navButtons[1].TextColor3 = Color3.fromRGB(0, 0, 0)
 
@@ -521,26 +445,14 @@ for _, btn in ipairs(navButtons) do
 	end)
 end
 
---======= TOGGLE GUI =======
+-- Toggle with Right Shift
 local open = false
-
-local function toggleGui()
-	open = not open
-	main.Visible = open
-
-	if open then
-		main.Position = UDim2.new(0.5, -450, 0.5, -300)
-		TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-			Position = UDim2.new(0.5, -450, 0.5, -280)
-		}):Play()
-	end
-end
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
 	if input.KeyCode == Enum.KeyCode.RightShift then
-		toggleGui()
+		open = not open
+		main.Visible = open
 	end
 end)
 
-print("[Admin Panel] Loaded — Press Right Shift to open")
+print("[Admin Panel] Loaded — Press Right Shift to toggle")
