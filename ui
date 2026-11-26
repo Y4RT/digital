@@ -1,586 +1,546 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
-<style>
-  :root {
-    --bg: #000000;
-    --surface: #0a0a0a;
-    --surface-2: #111111;
-    --border: #1f1f1f;
-    --text: #ffffff;
-    --text-dim: #888888;
-    --accent: #ffffff;
-    --accent-glow: rgba(255, 255, 255, 0.15);
-    --radius: 12px;
-    --glow-strength: 0.4;
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-  }
-
-  /* ===== SIDEBAR ===== */
-  .sidebar {
-    width: 72px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-    gap: 8px;
-    z-index: 10;
-  }
-
-  .nav-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    position: relative;
-  }
-
-  .nav-btn:hover {
-    background: var(--surface-2);
-    color: var(--text);
-  }
-
-  .nav-btn.active {
-    background: var(--accent-glow);
-    color: var(--accent);
-    box-shadow: 0 0 20px var(--accent-glow);
-  }
-
-  .nav-btn svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .spacer {
-    flex: 1;
-  }
-
-  /* ===== MAIN ===== */
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-  }
-
-  .header {
-    height: 64px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    background: var(--surface);
-  }
-
-  .header h1 {
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: -0.3px;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .content {
-    flex: 1;
-    padding: 28px;
-    overflow-y: auto;
-    position: relative;
-  }
-
-  /* ===== PAGES ===== */
-  .page {
-    display: none;
-    animation: fadeIn 0.25s ease;
-  }
-
-  .page.active {
-    display: block;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    margin-bottom: 20px;
-  }
-
-  .card h2 {
-    font-size: 15px;
-    font-weight: 500;
-    margin-bottom: 16px;
-    color: var(--text);
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
-  }
-
-  .stat {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-
-  .stat .label {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-
-  .stat .value {
-    font-size: 24px;
-    font-weight: 500;
-  }
-
-  /* ===== BUTTONS ===== */
-  .btn {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 10px 18px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: all 0.15s ease;
-  }
-
-  .btn:hover {
-    background: var(--accent-glow);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #000;
-    border: none;
-  }
-
-  .btn-primary:hover {
-    opacity: 0.9;
-    box-shadow: 0 0 20px var(--accent-glow);
-  }
-
-  /* ===== THEME PANEL ===== */
-  .theme-panel {
-    position: fixed;
-    top: 0;
-    right: -360px;
-    width: 340px;
-    height: 100%;
-    background: var(--surface);
-    border-left: 1px solid var(--border);
-    padding: 28px;
-    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 100;
-    overflow-y: auto;
-  }
-
-  .theme-panel.open {
-    right: 0;
-  }
-
-  .theme-panel h2 {
-    font-size: 16px;
-    margin-bottom: 24px;
-  }
-
-  .setting {
-    margin-bottom: 22px;
-  }
-
-  .setting label {
-    display: block;
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
-  input[type="color"] {
-    width: 100%;
-    height: 40px;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    cursor: pointer;
-  }
-
-  input[type="range"] {
-    width: 100%;
-    accent-color: var(--accent);
-  }
-
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .toggle {
-    width: 44px;
-    height: 24px;
-    background: var(--surface-2);
-    border-radius: 12px;
-    position: relative;
-    cursor: pointer;
-    border: 1px solid var(--border);
-  }
-
-  .toggle::after {
-    content: '';
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    background: var(--text);
-    border-radius: 50%;
-    top: 2px;
-    left: 2px;
-    transition: 0.2s;
-  }
-
-  .toggle.on {
-    background: var(--accent);
-  }
-
-  .toggle.on::after {
-    left: 22px;
-    background: #000;
-  }
-
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    opacity: 0;
-    pointer-events: none;
-    transition: 0.3s;
-    z-index: 90;
-  }
-
-  .overlay.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* utility */
-  .row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-</style>
-</head>
-<body>
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <button class="nav-btn active" data-page="dashboard" title="Dashboard">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-  </button>
-  <button class="nav-btn" data-page="players" title="Players">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-  </button>
-  <button class="nav-btn" data-page="world" title="World">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-  </button>
-  <button class="nav-btn" data-page="logs" title="Logs">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-  </button>
-
-  <div class="spacer"></div>
-
-  <button class="nav-btn" id="themeBtn" title="Theme Settings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-  </button>
-</div>
-
-<!-- MAIN -->
-<div class="main">
-  <div class="header">
-    <h1 id="pageTitle">Dashboard</h1>
-    <div class="header-right">
-      <button class="btn" onclick="document.getElementById('themeBtn').click()">Theme</button>
-    </div>
-  </div>
-
-  <div class="content">
-
-    <!-- DASHBOARD -->
-    <div class="page active" id="dashboard">
-      <div class="grid">
-        <div class="stat">
-          <div class="label">Online Players</div>
-          <div class="value">24</div>
-        </div>
-        <div class="stat">
-          <div class="label">Server Uptime</div>
-          <div class="value">14h 32m</div>
-        </div>
-        <div class="stat">
-          <div class="label">TPS</div>
-          <div class="value">19.8</div>
-        </div>
-        <div class="stat">
-          <div class="label">Memory</div>
-          <div class="value">2.1 GB</div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:24px">
-        <h2>Quick Actions</h2>
-        <div class="row">
-          <button class="btn btn-primary">Restart Server</button>
-          <button class="btn">Broadcast Message</button>
-          <button class="btn">Clear Chat</button>
-          <button class="btn">Save World</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- PLAYERS -->
-    <div class="page" id="players">
-      <div class="card">
-        <h2>Player List</h2>
-        <p style="color:var(--text-dim);font-size:14px;margin-bottom:16px">Click a player to manage them.</p>
-        <div class="row">
-          <button class="btn">Player_Alpha</button>
-          <button class="btn">xXShadowXx</button>
-          <button class="btn">NoobMaster69</button>
-          <button class="btn">AdminBot</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Player Actions</h2>
-        <div class="row">
-          <button class="btn">Kick</button>
-          <button class="btn">Ban</button>
-          <button class="btn">Teleport</button>
-          <button class="btn">Spectate</button>
-          <button class="btn">Give Item</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- WORLD -->
-    <div class="page" id="world">
-      <div class="card">
-        <h2>World Controls</h2>
-        <div class="row">
-          <button class="btn">Set Time to Day</button>
-          <button class="btn">Set Time to Night</button>
-          <button class="btn">Clear Weather</button>
-          <button class="btn">Toggle PvP</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- LOGS -->
-    <div class="page" id="logs">
-      <div class="card">
-        <h2>Recent Logs</h2>
-        <div style="font-family:monospace;font-size:13px;color:var(--text-dim);line-height:1.7">
-          [07:02:14] Player_Alpha joined the game<br>
-          [07:01:58] Server saved world<br>
-          [07:00:12] xXShadowXx was teleported<br>
-          [06:58:44] Broadcast: Welcome to the server!
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- THEME PANEL -->
-<div class="overlay" id="overlay"></div>
-<div class="theme-panel" id="themePanel">
-  <h2>Theme Settings</h2>
-
-  <div class="setting">
-    <label>Accent Color</label>
-    <input type="color" id="accentColor" value="#ffffff">
-  </div>
-
-  <div class="setting">
-    <label>Glow Strength <span id="glowValue">0.4</span></label>
-    <input type="range" id="glowStrength" min="0" max="1" step="0.05" value="0.4">
-  </div>
-
-  <div class="setting">
-    <label>Border Radius <span id="radiusValue">12</span>px</label>
-    <input type="range" id="borderRadius" min="0" max="24" step="1" value="12">
-  </div>
-
-  <div class="setting">
-    <div class="toggle-row">
-      <label style="margin:0">Light Mode</label>
-      <div class="toggle" id="lightToggle"></div>
-    </div>
-  </div>
-
-  <div class="setting" style="margin-top:32px">
-    <button class="btn btn-primary" style="width:100%" onclick="resetTheme()">Reset to Default</button>
-  </div>
-</div>
-
-<script>
-  // Page switching
-  const navButtons = document.querySelectorAll('.nav-btn[data-page]');
-  const pages = document.querySelectorAll('.page');
-  const pageTitle = document.getElementById('pageTitle');
-
-  const titles = {
-    dashboard: 'Dashboard',
-    players: 'Players',
-    world: 'World',
-    logs: 'Logs'
-  };
-
-  navButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const page = btn.dataset.page;
-
-      navButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      pages.forEach(p => p.classList.remove('active'));
-      document.getElementById(page).classList.add('active');
-
-      pageTitle.textContent = titles[page] || page;
-    });
-  });
-
-  // Theme panel
-  const themeBtn = document.getElementById('themeBtn');
-  const themePanel = document.getElementById('themePanel');
-  const overlay = document.getElementById('overlay');
-
-  function openTheme() {
-    themePanel.classList.add('open');
-    overlay.classList.add('show');
-  }
-  function closeTheme() {
-    themePanel.classList.remove('open');
-    overlay.classList.remove('show');
-  }
-
-  themeBtn.addEventListener('click', openTheme);
-  overlay.addEventListener('click', closeTheme);
-
-  // Theme controls
-  const root = document.documentElement;
-
-  document.getElementById('accentColor').addEventListener('input', e => {
-    root.style.setProperty('--accent', e.target.value);
-    updateGlow();
-  });
-
-  document.getElementById('glowStrength').addEventListener('input', e => {
-    document.getElementById('glowValue').textContent = e.target.value;
-    root.style.setProperty('--glow-strength', e.target.value);
-    updateGlow();
-  });
-
-  document.getElementById('borderRadius').addEventListener('input', e => {
-    document.getElementById('radiusValue').textContent = e.target.value;
-    root.style.setProperty('--radius', e.target.value + 'px');
-  });
-
-  function updateGlow() {
-    const accent = getComputedStyle(root).getPropertyValue('--accent').trim();
-    const strength = getComputedStyle(root).getPropertyValue('--glow-strength').trim();
-    // simple conversion
-    root.style.setProperty('--accent-glow', hexToRgba(accent, strength));
-  }
-
-  function hexToRgba(hex, alpha) {
-    const r = parseInt(hex.slice(1,3), 16);
-    const g = parseInt(hex.slice(3,5), 16);
-    const b = parseInt(hex.slice(5,7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-
-  // Light mode toggle
-  const lightToggle = document.getElementById('lightToggle');
-  let isLight = false;
-
-  lightToggle.addEventListener('click', () => {
-    isLight = !isLight;
-    lightToggle.classList.toggle('on', isLight);
-
-    if (isLight) {
-      root.style.setProperty('--bg', '#f5f5f5');
-      root.style.setProperty('--surface', '#ffffff');
-      root.style.setProperty('--surface-2', '#f0f0f0');
-      root.style.setProperty('--border', '#e0e0e0');
-      root.style.setProperty('--text', '#111111');
-      root.style.setProperty('--text-dim', '#666666');
-    } else {
-      root.style.setProperty('--bg', '#000000');
-      root.style.setProperty('--surface', '#0a0a0a');
-      root.style.setProperty('--surface-2', '#111111');
-      root.style.setProperty('--border', '#1f1f1f');
-      root.style.setProperty('--text', '#ffffff');
-      root.style.setProperty('--text-dim', '#888888');
-    }
-  });
-
-  function resetTheme() {
-    document.getElementById('accentColor').value = '#ffffff';
-    document.getElementById('glowStrength').value = 0.4;
-    document.getElementById('borderRadius').value = 12;
-    document.getElementById('glowValue').textContent = '0.4';
-    document.getElementById('radiusValue').textContent = '12';
-
-    root.style.setProperty('--accent', '#ffffff');
-    root.style.setProperty('--glow-strength', '0.4');
-    root.style.setProperty('--radius', '12px');
-    root.style.setProperty('--accent-glow', 'rgba(255,255,255,0.15)');
-
-    if (isLight) {
-      lightToggle.click(); // turn off light mode
-    }
-  }
-</script>
-</body>
-</html>
+-- Admin Panel UI (Roblox)
+-- Put this LocalScript in StarterGui
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--// Theme Variables
+local Theme = {
+	Background = Color3.fromRGB(0, 0, 0),
+	Surface = Color3.fromRGB(10, 10, 10),
+	Surface2 = Color3.fromRGB(17, 17, 17),
+	Border = Color3.fromRGB(31, 31, 31),
+	Text = Color3.fromRGB(255, 255, 255),
+	TextDim = Color3.fromRGB(136, 136, 136),
+	Accent = Color3.fromRGB(255, 255, 255),
+	Radius = 12,
+	Glow = 0.25
+}
+
+--// Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AdminPanel"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+--// Main Container
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.new(0, 900, 0, 560)
+main.Position = UDim2.new(0.5, -450, 0.5, -280)
+main.BackgroundColor3 = Theme.Background
+main.BorderSizePixel = 0
+main.Visible = false
+main.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, Theme.Radius)
+mainCorner.Parent = main
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Theme.Border
+mainStroke.Thickness = 1
+mainStroke.Parent = main
+
+--// Sidebar
+local sidebar = Instance.new("Frame")
+sidebar.Name = "Sidebar"
+sidebar.Size = UDim2.new(0, 72, 1, 0)
+sidebar.BackgroundColor3 = Theme.Surface
+sidebar.BorderSizePixel = 0
+sidebar.Parent = main
+
+local sidebarCorner = Instance.new("UICorner")
+sidebarCorner.CornerRadius = UDim.new(0, Theme.Radius)
+sidebarCorner.Parent = sidebar
+
+-- make left side square
+local sidebarFix = Instance.new("Frame")
+sidebarFix.Size = UDim2.new(0, 20, 1, 0)
+sidebarFix.Position = UDim2.new(1, -20, 0, 0)
+sidebarFix.BackgroundColor3 = Theme.Surface
+sidebarFix.BorderSizePixel = 0
+sidebarFix.Parent = sidebar
+
+--// Content Area
+local content = Instance.new("Frame")
+content.Name = "Content"
+content.Size = UDim2.new(1, -72, 1, 0)
+content.Position = UDim2.new(0, 72, 0, 0)
+content.BackgroundColor3 = Theme.Background
+content.BorderSizePixel = 0
+content.Parent = main
+
+-- Header
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 60)
+header.BackgroundColor3 = Theme.Surface
+header.BorderSizePixel = 0
+header.Parent = content
+
+local headerTitle = Instance.new("TextLabel")
+headerTitle.Name = "Title"
+headerTitle.Size = UDim2.new(1, -40, 1, 0)
+headerTitle.Position = UDim2.new(0, 24, 0, 0)
+headerTitle.BackgroundTransparency = 1
+headerTitle.Text = "Dashboard"
+headerTitle.TextColor3 = Theme.Text
+headerTitle.TextSize = 18
+headerTitle.Font = Enum.Font.GothamMedium
+headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+headerTitle.Parent = header
+
+--// Pages Container
+local pages = Instance.new("Frame")
+pages.Name = "Pages"
+pages.Size = UDim2.new(1, 0, 1, -60)
+pages.Position = UDim2.new(0, 0, 0, 60)
+pages.BackgroundTransparency = 1
+pages.Parent = content
+
+-- Helper function to create a page
+local function createPage(name)
+	local page = Instance.new("ScrollingFrame")
+	page.Name = name
+	page.Size = UDim2.new(1, 0, 1, 0)
+	page.BackgroundTransparency = 1
+	page.BorderSizePixel = 0
+	page.ScrollBarThickness = 4
+	page.ScrollBarImageColor3 = Theme.Border
+	page.CanvasSize = UDim2.new(0, 0, 0, 0)
+	page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	page.Visible = false
+	page.Parent = pages
+
+	local pad = Instance.new("UIPadding")
+	pad.PaddingTop = UDim.new(0, 24)
+	pad.PaddingLeft = UDim.new(0, 24)
+	pad.PaddingRight = UDim.new(0, 24)
+	pad.PaddingBottom = UDim.new(0, 24)
+	pad.Parent = page
+
+	local list = Instance.new("UIListLayout")
+	list.Padding = UDim.new(0, 16)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Parent = page
+
+	return page
+end
+
+-- Create pages
+local dashboardPage = createPage("Dashboard")
+local playersPage = createPage("Players")
+local worldPage = createPage("World")
+local logsPage = createPage("Logs")
+local themePage = createPage("Theme")
+
+dashboardPage.Visible = true
+
+--======= DASHBOARD CONTENT =======
+local function createStatCard(parent, title, value)
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(0, 180, 0, 90)
+	card.BackgroundColor3 = Theme.Surface2
+	card.BorderSizePixel = 0
+	card.Parent = parent
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, Theme.Radius)
+	corner.Parent = card
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Theme.Border
+	stroke.Thickness = 1
+	stroke.Parent = card
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -24, 0, 20)
+	label.Position = UDim2.new(0, 16, 0, 16)
+	label.BackgroundTransparency = 1
+	label.Text = title
+	label.TextColor3 = Theme.TextDim
+	label.TextSize = 13
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = card
+
+	local val = Instance.new("TextLabel")
+	val.Size = UDim2.new(1, -24, 0, 30)
+	val.Position = UDim2.new(0, 16, 0, 42)
+	val.BackgroundTransparency = 1
+	val.Text = value
+	val.TextColor3 = Theme.Text
+	val.TextSize = 24
+	val.Font = Enum.Font.GothamMedium
+	val.TextXAlignment = Enum.TextXAlignment.Left
+	val.Parent = card
+
+	return card
+end
+
+local statsRow = Instance.new("Frame")
+statsRow.Size = UDim2.new(1, 0, 0, 90)
+statsRow.BackgroundTransparency = 1
+statsRow.Parent = dashboardPage
+
+local statsLayout = Instance.new("UIListLayout")
+statsLayout.FillDirection = Enum.FillDirection.Horizontal
+statsLayout.Padding = UDim.new(0, 16)
+statsLayout.Parent = statsRow
+
+createStatCard(statsRow, "Online Players", "24")
+createStatCard(statsRow, "Server Uptime", "14h 32m")
+createStatCard(statsRow, "TPS", "19.8")
+createStatCard(statsRow, "Memory", "2.1 GB")
+
+-- Quick Actions card
+local actionsCard = Instance.new("Frame")
+actionsCard.Size = UDim2.new(1, 0, 0, 120)
+actionsCard.BackgroundColor3 = Theme.Surface
+actionsCard.BorderSizePixel = 0
+actionsCard.Parent = dashboardPage
+
+local acCorner = Instance.new("UICorner")
+acCorner.CornerRadius = UDim.new(0, Theme.Radius)
+acCorner.Parent = actionsCard
+
+local acStroke = Instance.new("UIStroke")
+acStroke.Color = Theme.Border
+acStroke.Thickness = 1
+acStroke.Parent = actionsCard
+
+local acTitle = Instance.new("TextLabel")
+acTitle.Size = UDim2.new(1, -32, 0, 24)
+acTitle.Position = UDim2.new(0, 20, 0, 16)
+acTitle.BackgroundTransparency = 1
+acTitle.Text = "Quick Actions"
+acTitle.TextColor3 = Theme.Text
+acTitle.TextSize = 15
+acTitle.Font = Enum.Font.GothamMedium
+acTitle.TextXAlignment = Enum.TextXAlignment.Left
+acTitle.Parent = actionsCard
+
+local function createButton(parent, text, isPrimary)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 140, 0, 36)
+	btn.BackgroundColor3 = isPrimary and Theme.Accent or Theme.Surface2
+	btn.Text = text
+	btn.TextColor3 = isPrimary and Color3.fromRGB(0, 0, 0) or Theme.Text
+	btn.TextSize = 13
+	btn.Font = Enum.Font.GothamMedium
+	btn.BorderSizePixel = 0
+	btn.AutoButtonColor = false
+	btn.Parent = parent
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = btn
+
+	if not isPrimary then
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Theme.Border
+		stroke.Thickness = 1
+		stroke.Parent = btn
+	end
+
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.15), {
+			BackgroundColor3 = isPrimary and Theme.Accent:Lerp(Color3.new(1,1,1), 0.1) or Theme.Surface
+		}):Play()
+	end)
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.15), {
+			BackgroundColor3 = isPrimary and Theme.Accent or Theme.Surface2
+		}):Play()
+	end)
+
+	return btn
+end
+
+local btnRow = Instance.new("Frame")
+btnRow.Size = UDim2.new(1, -40, 0, 36)
+btnRow.Position = UDim2.new(0, 20, 0, 56)
+btnRow.BackgroundTransparency = 1
+btnRow.Parent = actionsCard
+
+local btnLayout = Instance.new("UIListLayout")
+btnLayout.FillDirection = Enum.FillDirection.Horizontal
+btnLayout.Padding = UDim.new(0, 10)
+btnLayout.Parent = btnRow
+
+createButton(btnRow, "Restart Server", true)
+createButton(btnRow, "Broadcast", false)
+createButton(btnRow, "Clear Chat", false)
+createButton(btnRow, "Save World", false)
+
+--======= PLAYERS PAGE =======
+local playersCard = Instance.new("Frame")
+playersCard.Size = UDim2.new(1, 0, 0, 200)
+playersCard.BackgroundColor3 = Theme.Surface
+playersCard.BorderSizePixel = 0
+playersCard.Parent = playersPage
+
+local pcCorner = Instance.new("UICorner")
+pcCorner.CornerRadius = UDim.new(0, Theme.Radius)
+pcCorner.Parent = playersCard
+
+local pcStroke = Instance.new("UIStroke")
+pcStroke.Color = Theme.Border
+pcStroke.Thickness = 1
+pcStroke.Parent = playersCard
+
+local pcTitle = Instance.new("TextLabel")
+pcTitle.Size = UDim2.new(1, -32, 0, 24)
+pcTitle.Position = UDim2.new(0, 20, 0, 16)
+pcTitle.BackgroundTransparency = 1
+pcTitle.Text = "Player List"
+pcTitle.TextColor3 = Theme.Text
+pcTitle.TextSize = 15
+pcTitle.Font = Enum.Font.GothamMedium
+pcTitle.TextXAlignment = Enum.TextXAlignment.Left
+pcTitle.Parent = playersCard
+
+local playerList = Instance.new("Frame")
+playerList.Size = UDim2.new(1, -40, 0, 100)
+playerList.Position = UDim2.new(0, 20, 0, 56)
+playerList.BackgroundTransparency = 1
+playerList.Parent = playersCard
+
+local plLayout = Instance.new("UIListLayout")
+plLayout.FillDirection = Enum.FillDirection.Horizontal
+plLayout.Padding = UDim.new(0, 10)
+plLayout.Parent = playerList
+
+for _, name in ipairs({"Player_Alpha", "xXShadowXx", "NoobMaster69", "AdminBot"}) do
+	createButton(playerList, name, false)
+end
+
+--======= WORLD PAGE =======
+local worldCard = Instance.new("Frame")
+worldCard.Size = UDim2.new(1, 0, 0, 120)
+worldCard.BackgroundColor3 = Theme.Surface
+worldCard.BorderSizePixel = 0
+worldCard.Parent = worldPage
+
+local wcCorner = Instance.new("UICorner")
+wcCorner.CornerRadius = UDim.new(0, Theme.Radius)
+wcCorner.Parent = worldCard
+
+local wcStroke = Instance.new("UIStroke")
+wcStroke.Color = Theme.Border
+wcStroke.Thickness = 1
+wcStroke.Parent = worldCard
+
+local wcTitle = Instance.new("TextLabel")
+wcTitle.Size = UDim2.new(1, -32, 0, 24)
+wcTitle.Position = UDim2.new(0, 20, 0, 16)
+wcTitle.BackgroundTransparency = 1
+wcTitle.Text = "World Controls"
+wcTitle.TextColor3 = Theme.Text
+wcTitle.TextSize = 15
+wcTitle.Font = Enum.Font.GothamMedium
+wcTitle.TextXAlignment = Enum.TextXAlignment.Left
+wcTitle.Parent = worldCard
+
+local worldBtnRow = Instance.new("Frame")
+worldBtnRow.Size = UDim2.new(1, -40, 0, 36)
+worldBtnRow.Position = UDim2.new(0, 20, 0, 56)
+worldBtnRow.BackgroundTransparency = 1
+worldBtnRow.Parent = worldCard
+
+local wbLayout = Instance.new("UIListLayout")
+wbLayout.FillDirection = Enum.FillDirection.Horizontal
+wbLayout.Padding = UDim.new(0, 10)
+wbLayout.Parent = worldBtnRow
+
+createButton(worldBtnRow, "Set Day", false)
+createButton(worldBtnRow, "Set Night", false)
+createButton(worldBtnRow, "Clear Weather", false)
+createButton(worldBtnRow, "Toggle PvP", false)
+
+--======= LOGS PAGE =======
+local logsCard = Instance.new("Frame")
+logsCard.Size = UDim2.new(1, 0, 0, 220)
+logsCard.BackgroundColor3 = Theme.Surface
+logsCard.BorderSizePixel = 0
+logsCard.Parent = logsPage
+
+local lcCorner = Instance.new("UICorner")
+lcCorner.CornerRadius = UDim.new(0, Theme.Radius)
+lcCorner.Parent = logsCard
+
+local lcStroke = Instance.new("UIStroke")
+lcStroke.Color = Theme.Border
+lcStroke.Thickness = 1
+lcStroke.Parent = logsCard
+
+local lcTitle = Instance.new("TextLabel")
+lcTitle.Size = UDim2.new(1, -32, 0, 24)
+lcTitle.Position = UDim2.new(0, 20, 0, 16)
+lcTitle.BackgroundTransparency = 1
+lcTitle.Text = "Recent Logs"
+lcTitle.TextColor3 = Theme.Text
+lcTitle.TextSize = 15
+lcTitle.Font = Enum.Font.GothamMedium
+lcTitle.TextXAlignment = Enum.TextXAlignment.Left
+lcTitle.Parent = logsCard
+
+local logsText = Instance.new("TextLabel")
+logsText.Size = UDim2.new(1, -40, 1, -60)
+logsText.Position = UDim2.new(0, 20, 0, 50)
+logsText.BackgroundTransparency = 1
+logsText.Text = "[07:02:14] Player_Alpha joined the game\n[07:01:58] Server saved world\n[07:00:12] xXShadowXx was teleported\n[06:58:44] Broadcast: Welcome to the server!"
+logsText.TextColor3 = Theme.TextDim
+logsText.TextSize = 13
+logsText.Font = Enum.Font.Code
+logsText.TextXAlignment = Enum.TextXAlignment.Left
+logsText.TextYAlignment = Enum.TextYAlignment.Top
+logsText.Parent = logsCard
+
+--======= THEME PAGE =======
+local themeCard = Instance.new("Frame")
+themeCard.Size = UDim2.new(1, 0, 0, 280)
+themeCard.BackgroundColor3 = Theme.Surface
+themeCard.BorderSizePixel = 0
+themeCard.Parent = themePage
+
+local tcCorner = Instance.new("UICorner")
+tcCorner.CornerRadius = UDim.new(0, Theme.Radius)
+tcCorner.Parent = themeCard
+
+local tcStroke = Instance.new("UIStroke")
+tcStroke.Color = Theme.Border
+tcStroke.Thickness = 1
+tcStroke.Parent = themeCard
+
+local tcTitle = Instance.new("TextLabel")
+tcTitle.Size = UDim2.new(1, -32, 0, 24)
+tcTitle.Position = UDim2.new(0, 20, 0, 16)
+tcTitle.BackgroundTransparency = 1
+tcTitle.Text = "Theme Settings"
+tcTitle.TextColor3 = Theme.Text
+tcTitle.TextSize = 15
+tcTitle.Font = Enum.Font.GothamMedium
+tcTitle.TextXAlignment = Enum.TextXAlignment.Left
+tcTitle.Parent = themeCard
+
+local themeInfo = Instance.new("TextLabel")
+themeInfo.Size = UDim2.new(1, -40, 0, 80)
+themeInfo.Position = UDim2.new(0, 20, 0, 56)
+themeInfo.BackgroundTransparency = 1
+themeInfo.Text = "Accent Color, Glow, Radius and Light Mode can be customized here.\n\n(Full color pickers + live preview coming in next version)"
+themeInfo.TextColor3 = Theme.TextDim
+themeInfo.TextSize = 13
+themeInfo.Font = Enum.Font.Gotham
+themeInfo.TextXAlignment = Enum.TextXAlignment.Left
+themeInfo.TextYAlignment = Enum.TextYAlignment.Top
+themeInfo.Parent = themeCard
+
+local resetBtn = createButton(themeCard, "Reset Theme", true)
+resetBtn.Position = UDim2.new(0, 20, 0, 160)
+resetBtn.Size = UDim2.new(0, 160, 0, 36)
+
+--======= SIDEBAR BUTTONS =======
+local function createNavButton(iconText, pageName, order)
+	local btn = Instance.new("TextButton")
+	btn.Name = pageName
+	btn.Size = UDim2.new(0, 44, 0, 44)
+	btn.Position = UDim2.new(0.5, -22, 0, 20 + (order * 52))
+	btn.BackgroundColor3 = Theme.Surface
+	btn.Text = iconText
+	btn.TextColor3 = Theme.TextDim
+	btn.TextSize = 18
+	btn.Font = Enum.Font.GothamBold
+	btn.BorderSizePixel = 0
+	btn.AutoButtonColor = false
+	btn.Parent = sidebar
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = btn
+
+	btn.MouseEnter:Connect(function()
+		if btn.BackgroundColor3 ~= Theme.Accent then
+			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Surface2}):Play()
+		end
+	end)
+	btn.MouseLeave:Connect(function()
+		if headerTitle.Text ~= pageName then
+			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Surface}):Play()
+		end
+	end)
+
+	return btn
+end
+
+local navButtons = {
+	createNavButton("⌂", "Dashboard", 0),
+	createNavButton("☺", "Players", 1),
+	createNavButton("◉", "World", 2),
+	createNavButton("≡", "Logs", 3),
+	createNavButton("⚙", "Theme", 5)
+}
+
+-- Make first button active
+navButtons[1].BackgroundColor3 = Theme.Accent
+navButtons[1].TextColor3 = Color3.fromRGB(0, 0, 0)
+
+local function switchPage(pageName)
+	for _, page in pairs(pages:GetChildren()) do
+		if page:IsA("ScrollingFrame") then
+			page.Visible = false
+		end
+	end
+
+	local target = pages:FindFirstChild(pageName)
+	if target then
+		target.Visible = true
+		headerTitle.Text = pageName
+	end
+
+	for _, btn in ipairs(navButtons) do
+		if btn.Name == pageName then
+			btn.BackgroundColor3 = Theme.Accent
+			btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+		else
+			btn.BackgroundColor3 = Theme.Surface
+			btn.TextColor3 = Theme.TextDim
+		end
+	end
+end
+
+for _, btn in ipairs(navButtons) do
+	btn.MouseButton1Click:Connect(function()
+		switchPage(btn.Name)
+	end)
+end
+
+--======= TOGGLE GUI =======
+local open = false
+
+local function toggleGui()
+	open = not open
+	main.Visible = open
+
+	if open then
+		main.Position = UDim2.new(0.5, -450, 0.5, -300)
+		TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0.5, -450, 0.5, -280)
+		}):Play()
+	end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.RightShift then
+		toggleGui()
+	end
+end)
+
+print("[Admin Panel] Loaded — Press Right Shift to open")
